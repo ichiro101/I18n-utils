@@ -2,14 +2,13 @@
 
 def print_help
 	puts "lrename is a utility to rename your locale files in your Ruby on Rails application"
-	puts "Usage: lrename [path to Rails] [from_locale] [to_locale]"
-
+	puts "Usage: lrename [path to Rails] [from_locale] [to_locale] <additional options>"
 	puts "For example, if your Ruby on Rails project is in /opt/app/my_app, and you want to rename all the en.yml locale to zz.yml, you would use lrename /opt/app/my_app en zz"
-
 	puts "WARNING: If your to_locale is already populated with something, this utility MAY OVERWRITE EVERYTHING YOU HAVE IN THAT LOCALE!"
 end
 
 class LocaleRenamer
+	@@DEFAULT_LOCALE_PATH = "/config/locales"
 
 	def path=(path_arg)
 		if !File.exist?(path_arg)
@@ -18,21 +17,99 @@ class LocaleRenamer
 		@path = path_arg
 	end
 
-	def from_locale(from_arg)
+	def from_locale=(from_arg)
 		@from_locale = from_arg
 	end
 
-	def to_locale(to_arg)
+	def to_locale=(to_arg)
 		@to_locale = to_arg
 	end
 
+	def rename
+		@path_to_locales = @path + @@DEFAULT_LOCALE_PATH
+		if !File.exist?(@path_to_locales)
+			raise StandardError, "we can't find the path to the locales directory, are you sure you supplied a Rails project?"
+		end
+
+		recurse!(@path_to_locales)
+	end
+
+	def recurse!(path)
+		Dir.foreach(path) do |item|
+			next if item == "." or item == ".."
+			if File.directory?("#{path}/#{item}")
+				recurse!("#{path}/#{item}")
+			else
+				f = File.new("#{path}/#{item}", "r")
+				rename_locale_file(path, f) if LocaleRenamer.is_locale?(f, @from_locale)
+				f.close
+			end
+		end
+	end
+
+	private
+
+	# check if the input file, is an instance of locale
+	def self.is_locale?(file, locale)
+		first_line = String.new
+		file.each_line do |line|
+			first_line = line
+			break
+		end
+		first_line = first_line.strip
+
+		file.rewind # make sure the pos points at zero again
+		if first_line == "#{locale}:"
+			true
+		else
+			false
+		end
+	end
+
+	# takes a file (a File object), and rename its content
+	def rename_locale_file(path, file)
+		# retrieve the filename
+		filename = file.path
+		filename.slice!(path)
+		if filename[0] == "/"
+			filename.slice!(0)
+		end
+
+		# rename the file
+		new_filename = rename_file(filename)
+
+		new_file = File.new("#{path}/#{new_filename}", "w")
+
+		# once the new file is created, we need to copy and paste
+		# the entire file, except for the first line
+		first_line = true
+		file.each_line do |line|
+			if first_line
+				new_file.puts "#{@to_locale}:"
+				first_line = false
+				next
+			end
+			new_file.puts line
+		end
+
+		puts "#{file.path} -> #{new_filename}"
+	end
+
+	def rename_file(in_file)
+		out_file = in_file
+		out_file.gsub!(/#{@from_locale}\.yml/, "#{@to_locale}.yml")
+		out_file
+	end
 end
+
+
+## This is where the program execution actually begins...
 
 begin
 	if ARGV.length != 3 and ARGV.length == 0
 		raise StandardError
 	elsif ARGV.length != 3
-		$stderr.puts "invalid number of arguments"
+		$stderr.puts("invalid number of arguments")
 		raise StandardError
 	end
 rescue
@@ -40,8 +117,11 @@ rescue
 end
 
 if ARGV.length == 3
-	renamer = LocaleRenamer.new
+	renamer = LocaleRenamer.new()
 	renamer.path = ARGV[0]
 	renamer.from_locale = ARGV[1]
 	renamer.to_locale = ARGV[2]
+
+	# do the concrete renaming
+	renamer.rename
 end
