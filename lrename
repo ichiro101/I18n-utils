@@ -5,10 +5,15 @@ def print_help
 	puts "Usage: lrename [path to Rails] [from_locale] [to_locale] <additional options>"
 	puts "For example, if your Ruby on Rails project is in /opt/app/my_app, and you want to rename all the en.yml locale to zz.yml, you would use lrename /opt/app/my_app en zz"
 	puts "WARNING: If your to_locale is already populated with something, this utility MAY OVERWRITE EVERYTHING YOU HAVE IN THAT LOCALE!"
+
+	puts "Additional Options:"
+	puts " --delete will delete the old files that is being renamed from"
 end
 
 class LocaleRenamer
 	@@DEFAULT_LOCALE_PATH = "/config/locales"
+
+	attr_accessor :delete
 
 	def path=(path_arg)
 		if !File.exist?(path_arg)
@@ -42,7 +47,6 @@ class LocaleRenamer
 			else
 				f = File.new("#{path}/#{item}", "r")
 				rename_locale_file(path, f) if LocaleRenamer.is_locale?(f, @from_locale)
-				f.close
 			end
 		end
 	end
@@ -92,6 +96,10 @@ class LocaleRenamer
 			new_file.puts line
 		end
 
+		if self.delete
+			File.unlink(file.path)
+		end
+
 		puts "#{file.path} -> #{new_filename}"
 	end
 
@@ -106,9 +114,9 @@ end
 ## This is where the program execution actually begins...
 
 begin
-	if ARGV.length != 3 and ARGV.length == 0
+	if ARGV.length < 3 and ARGV.length == 0
 		raise StandardError
-	elsif ARGV.length != 3
+	elsif ARGV.length < 3
 		$stderr.puts("invalid number of arguments")
 		raise StandardError
 	end
@@ -116,11 +124,17 @@ rescue
 	print_help
 end
 
-if ARGV.length == 3
+if ARGV.length >= 3
 	renamer = LocaleRenamer.new()
 	renamer.path = ARGV[0]
 	renamer.from_locale = ARGV[1]
 	renamer.to_locale = ARGV[2]
+
+	if ARGV.length > 3
+		if ARGV[3] == "--delete"
+			renamer.delete = true
+		end
+	end
 
 	# do the concrete renaming
 	renamer.rename
