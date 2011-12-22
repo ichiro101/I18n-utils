@@ -1,3 +1,47 @@
 #!/usr/bin/env ruby
 
-puts "hello world"
+def print_help
+	puts "lrename is a utility to rename your locale files in your Ruby on Rails application"
+	puts "Usage: lrename [path to Rails] [from_locale] [to_locale]"
+
+	puts "For example, if your Ruby on Rails project is in /opt/app/my_app, and you want to rename all the en.yml locale to zz.yml, you would use lrename /opt/app/my_app en zz"
+
+	puts "WARNING: If your to_locale is already populated with something, this utility MAY OVERWRITE EVERYTHING YOU HAVE IN THAT LOCALE!"
+end
+
+class LocaleRenamer
+
+	def path=(path_arg)
+		if !File.exist?(path_arg)
+			raise StandardError, "the directory you have supplied does not exist"
+		end
+		@path = path_arg
+	end
+
+	def from_locale(from_arg)
+		@from_locale = from_arg
+	end
+
+	def to_locale(to_arg)
+		@to_locale = to_arg
+	end
+
+end
+
+begin
+	if ARGV.length != 3 and ARGV.length == 0
+		raise StandardError
+	elsif ARGV.length != 3
+		$stderr.puts "invalid number of arguments"
+		raise StandardError
+	end
+rescue
+	print_help
+end
+
+if ARGV.length == 3
+	renamer = LocaleRenamer.new
+	renamer.path = ARGV[0]
+	renamer.from_locale = ARGV[1]
+	renamer.to_locale = ARGV[2]
+end
