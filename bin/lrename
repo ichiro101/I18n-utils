@@ -2,10 +2,10 @@
 
 def print_help
 	puts "lrename is a utility to rename your locale files in your Ruby on Rails application"
+	puts ""
 	puts "Usage: lrename [path to Rails] [from_locale] [to_locale] <additional options>"
 	puts "For example, if your Ruby on Rails project is in /opt/app/my_app, and you want to rename all the en.yml locale to zz.yml, you would use lrename /opt/app/my_app en zz"
 	puts "WARNING: If your to_locale is already populated with something, this utility MAY OVERWRITE EVERYTHING YOU HAVE IN THAT LOCALE!"
-
 	puts "Additional Options:"
 	puts " --delete will delete the old files that is being renamed from"
 end

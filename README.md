@@ -3,6 +3,8 @@ RoR Locale Tools
 
 lcount
 ------
+lcount is a tool to count the number of words of a specific locale
+in your Ruby on Rails applicaiton.
 
 lrename
 -------

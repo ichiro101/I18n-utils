@@ -1,5 +1,71 @@
 #!/usr/bin/env ruby
 
-def print_help
-	puts "lcount is a utility used to count the number of words in your yaml files."
+require 'yaml'
+
+module LCount
+
+	def print_help
+		puts "lcount - Locale Word Count Utility"
+		puts ""
+		puts "lcount will help count the number of words in a locale file"
+		puts "Usage: lcount [path to a yml file]"
+	end
+
+	def lcount(file_string)
+		puts "Attemting to count #{file_string}"
+
+		begin
+			@file = File.new(file_string)
+		rescue
+			raise StandardError, "file/path you entered is does not exist"
+		end
+
+		@yml = YAML.load_file(@file)
+		@total_words = 0
+		recursive_count(@yml)
+
+		puts "Total number of words #{@total_words}"
+	end
+
+	def recursive_count(count_hash)
+		count_hash.each_pair do |key, value|
+			if value.is_a? Hash
+				recursive_count(value)
+			elsif value.is_a? Array
+				value.each do |array_element|
+					count_words(array_element)
+				end
+			elsif value.is_a? String
+				count_words(value)
+			end
+		end
+	end
+
+	# count the words in the string and increment the
+	# total words
+	def count_words(count_string)
+		count_string = count_string.to_s unless count_string.is_a? String
+		unless count_string.nil?
+			array_elem = count_string.split(/\s+/)
+			@total_words += array_elem.size
+		end
+	end
 end
+
+def main
+	include LCount
+
+	if ARGV.length == 0
+		print_help
+	elsif ARGV.length == 1
+		lcount(ARGV[0])
+	else
+		raise StandardError, "incorrect number of arguments"
+	end
+
+end
+
+if __FILE__ == $0
+	main
+end
+
