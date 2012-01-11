@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+def print_help
+	puts "lcount is a utility used to count the number of words in your yaml files."
+end

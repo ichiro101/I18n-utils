@@ -1,7 +1,12 @@
-RoR Locale Renamer (lrename)
-============================
+RoR Locale Tools
+================
 
-RoR locale renamer (lrename) is a tool to rename all the locale YML files in your
+lcount
+------
+
+lrename
+-------
+lrename is a tool to rename all the locale YML files in your
 Ruby on Rails application.
 
 TODO
